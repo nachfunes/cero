@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CERO — El Juego</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:wght@400;700&family=VT323&family=Special+Elite&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;600&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
+body { overflow-x: hidden; }
+
+/* ── CASINO NOIR (default) ── */
+body {
+  --bg:          #0a0a0a;
+  --bg2:         #141414;
+  --bg3:         #1c1c1c;
+  --accent:      #c9a84c;
+  --text:        #f0e6cc;
+  --text2:       #a09070;
+  --neg:         #cc3333;
+  --pos:         #4a9e6a;
+  --border:      #c9a84c33;
+  --card:        #141414;
+  --cborder:     #c9a84c44;
+  --shadow:      0 0 32px #c9a84c18;
+  --die-bg:      #1a0a00;
+  --die-dot:     #c9a84c;
+  --fd: 'Bebas Neue', cursive;
+  --ft: 'Playfair Display', serif;
+  --fb: 'DM Sans', sans-serif;
+  --fm: 'DM Mono', monospace;
+  background: var(--bg) url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30z' fill='none' stroke='%23c9a84c0d' stroke-width='1'/%3E%3C/svg%3E");
+  color: var(--text);
+}
+body.t-nautico {
+  --bg:#0d1117; --bg2:#161b22; --bg3:#21262d;
+  --accent:#c8a850; --text:#e8dcc8; --text2:#8b9096;
+  --neg:#b85450; --pos:#3d7a5c;
+  --border:#c8a85028; --card:#161b22; --cborder:#c8a85040;
+  --shadow:0 4px 24px #00000066; --die-bg:#0d1117; --die-dot:#c8a850;
+  --fd:'Bebas Neue',cursive; --ft:'Bebas Neue',cursive;
+  --fb:'DM Sans',sans-serif; --fm:'DM Mono',monospace;
+  background: var(--bg);
+}
+body.t-anotador {
+  --bg:#faf8f0; --bg2:#f5f2e8; --bg3:#eeeadc;
+  --accent:#222; --text:#1a1a1a; --text2:#777;
+  --neg:#c0392b; --pos:#27ae60;
+  --border:#ccc; --card:#fffdf5; --cborder:#ccc;
+  --shadow:2px 2px 0 #bbb; --die-bg:#f0ece0; --die-dot:#1a1a1a;
+  --fd:'Special Elite',cursive; --ft:'Special Elite',cursive;
+  --fb:'Special Elite',cursive; --fm:'Special Elite',cursive;
+  background: var(--bg);
+  background-image: repeating-linear-gradient(transparent,transparent 27px,#00000009 27px,#00000009 28px);
+}
+body.t-arcade {
+  --bg:#050505; --bg2:#0a0a0a; --bg3:#0f0f0f;
+  --accent:#00ff41; --text:#00ff41; --text2:#007a1f;
+  --neg:#ff0090; --pos:#00cfff;
+  --border:#00ff4128; --card:#0a0a0a; --cborder:#00ff4138;
+  --shadow:0 0 20px #00ff4122; --die-bg:#050505; --die-dot:#00ff41;
+  --fd:'VT323',monospace; --ft:'VT323',monospace;
+  --fb:'VT323',monospace; --fm:'VT323',monospace;
+  background: var(--bg);
+}
+body.t-arcade::after {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,#00000033 2px,#00000033 4px);
+}
+body.t-tarot {
+  --bg:#0f0818; --bg2:#160d24; --bg3:#1e1230;
+  --accent:#d4af37; --text:#e8ddf5; --text2:#9070b0;
+  --neg:#cc2244; --pos:#4488cc;
+  --border:#d4af3728; --card:#160d24; --cborder:#d4af3740;
+  --shadow:0 0 40px #7b2d8b22; --die-bg:#0f0818; --die-dot:#d4af37;
+  --fd:'UnifrakturMaguntia',cursive; --ft:'UnifrakturMaguntia',cursive;
+  --fb:'Playfair Display',serif; --fm:'DM Mono',monospace;
+  background: var(--bg);
+}
+
+/* ── LAYOUT ── */
+#app {
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px; gap: 14px;
+}
+
+/* ── HEADER ── */
+.hdr { text-align: center; padding-top: 12px; }
+.hdr-title {
+  font-family: var(--fd);
+  font-size: clamp(3.5rem, 13vw, 7.5rem);
+  color: var(--accent); line-height: 1; letter-spacing: 0.06em;
+}
+.hdr-sub {
+  font-family: var(--fb);
+  font-size: 0.68rem; letter-spacing: 0.35em;
+  text-transform: uppercase; color: var(--text2); margin-top: 2px;
+}
+
+/* ── THEME BAR ── */
+.theme-bar {
+  display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+}
+.tbtn {
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  background: var(--bg2); color: var(--text2);
+  font-size: 0.78rem; letter-spacing: 0.08em;
+  cursor: pointer; transition: all 0.18s; line-height: 1.4;
+}
+.tbtn:hover, .tbtn.on { border-color: var(--accent); color: var(--accent); background: var(--bg3); }
+/* Each theme button shows its own font */
+.tbtn-casino   { font-family: 'Playfair Display', serif; }
+.tbtn-nautico  { font-family: 'Bebas Neue', cursive; letter-spacing: 0.15em; }
+.tbtn-anotador { font-family: 'Special Elite', cursive; }
+.tbtn-arcade   { font-family: 'VT323', monospace; font-size: 1rem; }
+.tbtn-tarot    { font-family: 'UnifrakturMaguntia', cursive; font-size: 0.9rem; }
+.tbtn-rules    { font-family: var(--fb); }
+
+/* ── SCREENS ── */
+.screen { display: none; width: 100%; max-width: 640px; }
+.screen.on { display: block; }
+
+/* ── SHARED CARD ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--cborder);
+  padding: 24px; box-shadow: var(--shadow);
+}
+body.t-tarot .card { background: linear-gradient(135deg, var(--bg2), var(--bg3)); }
+
+/* ── BUTTONS ── */
+.btn-main {
+  padding: 11px 28px;
+  background: var(--accent); color: var(--bg);
+  border: none; font-family: var(--fd);
+  font-size: 1.05rem; letter-spacing: 0.18em;
+  cursor: pointer; text-transform: uppercase;
+  transition: filter 0.15s, transform 0.15s;
+}
+.btn-main:hover  { filter: brightness(1.15); transform: translateY(-1px); }
+.btn-main:active { transform: translateY(0); }
+.btn-main:disabled { opacity: 0.35; cursor: not-allowed; transform: none; filter: none; }
+.btn-sec {
+  padding: 10px 20px; background: transparent;
+  border: 1px solid var(--border); color: var(--text2);
+  font-family: var(--fb); font-size: 0.82rem; letter-spacing: 0.1em;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-sec:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── SETUP ── */
+.setup-heading {
+  font-family: var(--fd); font-size: 1.6rem;
+  letter-spacing: 0.12em; color: var(--accent); margin-bottom: 20px;
+}
+.player-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.player-row  { display: flex; gap: 10px; align-items: center; }
+.p-input {
+  flex: 1; padding: 10px 14px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--fb); font-size: 0.95rem;
+  outline: none; transition: border-color 0.15s;
+}
+.p-input:focus { border-color: var(--accent); }
+.p-input::placeholder { color: var(--text2); }
+.btn-x {
+  width: 34px; height: 34px; flex-shrink: 0;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--neg); font-size: 0.95rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.btn-x:hover { background: var(--neg); color: #fff; border-color: var(--neg); }
+.setup-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ── GAME LAYOUT ── */
+.game-layout { display: flex; flex-direction: column; gap: 10px; }
+
+/* ── SCOREBOARD ── */
+.scoreboard { display: flex; flex-direction: column; gap: 7px; }
+.p-card {
+  background: var(--card); border: 1px solid var(--cborder);
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: 1fr 52px 52px;
+  grid-template-rows: auto 5px;
+  column-gap: 10px; row-gap: 6px;
+  align-items: center; position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+body.t-tarot .p-card { background: linear-gradient(135deg, var(--bg2), var(--bg3)); }
+.p-card.active { border-color: var(--accent); box-shadow: var(--shadow); }
+.p-card.active::before {
+  content: '▶'; position: absolute; left: 5px; top: 50%; transform: translateY(-50%);
+  color: var(--accent); font-size: 0.5rem;
+  animation: blink 1s step-end infinite;
+}
+.p-card.dead { opacity: 0.38; border-color: var(--neg); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+.p-name {
+  font-family: var(--ft); font-size: 1rem;
+  color: var(--text); padding-left: 10px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.p-score { text-align: center; }
+.p-score-lbl {
+  font-family: var(--fb); font-size: 0.55rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--text2); line-height: 1;
+}
+.p-score-val {
+  font-family: var(--fm); font-size: 1.05rem;
+  font-weight: 500; line-height: 1.3;
+}
+.s-neg { color: var(--neg); }
+.s-pos { color: var(--pos); }
+
+.p-prog {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 4px;
+}
+.prog-lbl {
+  font-family: var(--fm); font-size: 0.55rem;
+  color: var(--text2); min-width: 18px; text-align: center;
+}
+.prog-track { flex: 1; height: 3px; background: var(--bg3); overflow: hidden; }
+.prog-track.flip { transform: scaleX(-1); }
+.prog-fill { height: 100%; transition: width 0.4s ease; }
+.fill-neg { background: var(--neg); }
+.fill-pos { background: var(--pos); }
+
+/* floater */
+@keyframes floatUp { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-44px)} }
+.floater {
+  position: absolute; pointer-events: none; z-index: 50;
+  font-family: var(--fm); font-size: 1rem; font-weight: 700;
+  animation: floatUp 1.1s ease-out forwards;
+}
+
+/* ── TURN PANEL ── */
+.turn-panel {
+  background: var(--card); border: 1px solid var(--cborder);
+  padding: 16px 20px 14px; box-shadow: var(--shadow); text-align: center;
+}
+body.t-tarot .turn-panel { background: linear-gradient(135deg, var(--bg2), var(--bg3)); }
+.t-label {
+  font-family: var(--fb); font-size: 0.62rem;
+  letter-spacing: 0.3em; text-transform: uppercase; color: var(--text2);
+}
+.t-name {
+  font-family: var(--fd); font-size: 1.7rem;
+  color: var(--accent); letter-spacing: 0.08em; line-height: 1.1; margin-bottom: 12px;
+}
+.declare-lbl {
+  font-family: var(--fb); font-size: 0.62rem;
+  letter-spacing: 0.25em; text-transform: uppercase; color: var(--text2); margin-bottom: 10px;
+}
+.dice-row { display: flex; gap: 8px; justify-content: center; }
+.die-btn {
+  width: 48px; height: 48px; flex-shrink: 0;
+  background: var(--die-bg); border: 2px solid var(--border);
+  cursor: pointer; padding: 8px;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.12s, transform 0.12s, background 0.12s, box-shadow 0.12s;
+}
+.die-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+.die-btn.picked {
+  border-color: var(--accent); background: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 16px #00000044;
+}
+.die-btn svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+.die-btn.picked svg circle { fill: var(--bg) !important; }
+
+.divider { width: 100%; height: 1px; background: var(--border); margin: 12px 0; }
+
+.result-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 14px; min-height: 58px;
+}
+.result-die {
+  width: 62px; height: 62px; flex-shrink: 0;
+  background: var(--die-bg); border: 2px solid var(--accent);
+  padding: 11px;
+  box-shadow: 0 0 18px #00000033;
+}
+.result-die svg { display: block; width: 100%; height: 100%; }
+.result-tag {
+  font-family: var(--fd); font-size: 0.95rem;
+  letter-spacing: 0.12em; padding: 7px 14px;
+  border: 1px solid currentColor; text-align: left; line-height: 1.35;
+  max-width: 240px;
+}
+.tag-correct { color: var(--accent); }
+.tag-over    { color: var(--pos); }
+.tag-under   { color: var(--neg); }
+
+@keyframes spin {
+  0%{transform:rotate(0deg) scale(1)} 25%{transform:rotate(90deg) scale(1.08)}
+  50%{transform:rotate(180deg) scale(0.92)} 75%{transform:rotate(270deg) scale(1.08)}
+  100%{transform:rotate(360deg) scale(1)}
+}
+.spinning { animation: spin 0.1s linear infinite; }
+
+.act-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+
+/* ── LOG ── */
+.log-box {
+  background: var(--card); border: 1px solid var(--cborder);
+  padding: 12px 16px; max-height: 130px; overflow-y: auto;
+}
+.log-head {
+  font-family: var(--fb); font-size: 0.6rem;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--text2); margin-bottom: 7px;
+}
+.log-line {
+  font-family: var(--fm); font-size: 0.77rem;
+  color: var(--text2); padding: 3px 0;
+  border-bottom: 1px solid var(--border); line-height: 1.5;
+}
+.log-line:last-child { border-bottom: none; }
+.ln { color: var(--accent); }
+.lc { color: var(--accent); }
+.lo { color: var(--pos); }
+.lu { color: var(--neg); }
+
+/* ── END SCREEN ── */
+.end-card {
+  background: var(--card); border: 1px solid var(--cborder);
+  padding: 44px 32px 32px; text-align: center; box-shadow: var(--shadow);
+}
+body.t-tarot .end-card { background: linear-gradient(135deg, var(--bg2), var(--bg3)); }
+.end-label {
+  font-family: var(--fb); font-size: 0.62rem;
+  letter-spacing: 0.4em; text-transform: uppercase; color: var(--text2); margin-bottom: 8px;
+}
+.end-name {
+  font-family: var(--fd); font-size: clamp(2.8rem, 10vw, 6rem);
+  color: var(--neg); letter-spacing: 0.04em; line-height: 1; margin-bottom: 8px;
+}
+.end-reason {
+  font-family: var(--fb); font-size: 0.75rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--text2); margin-bottom: 28px;
+}
+.win-label {
+  font-family: var(--fb); font-size: 0.62rem;
+  letter-spacing: 0.3em; text-transform: uppercase; color: var(--text2); margin-bottom: 6px;
+}
+.win-name {
+  font-family: var(--fd); font-size: 2rem;
+  color: var(--pos); letter-spacing: 0.08em; margin-bottom: 24px;
+}
+
+/* ── RULES OVERLAY ── */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: #00000099; z-index: 1000;
+  align-items: center; justify-content: center; padding: 20px;
+}
+.overlay.on { display: flex; }
+.overlay-box {
+  background: var(--bg2); border: 1px solid var(--cborder);
+  padding: 30px; max-width: 460px; width: 100%;
+  box-shadow: var(--shadow); position: relative;
+}
+.overlay-box h2 {
+  font-family: var(--fd); font-size: 1.8rem;
+  color: var(--accent); letter-spacing: 0.1em; margin-bottom: 14px;
+}
+.overlay-box p, .overlay-box li {
+  font-family: var(--fb); font-size: 0.87rem;
+  color: var(--text2); line-height: 1.7; margin-bottom: 6px;
+}
+.overlay-box ul { padding-left: 18px; margin-bottom: 10px; }
+.overlay-close {
+  position: absolute; top: 12px; right: 14px;
+  background: transparent; border: none;
+  color: var(--text2); font-size: 1.3rem; cursor: pointer;
+}
+
+/* arcade glow */
+body.t-arcade .hdr-title,
+body.t-arcade .t-name,
+body.t-arcade .end-name { text-shadow: 0 0 12px currentColor; }
+
+@media (max-width: 480px) {
+  .die-btn { width: 42px; height: 42px; }
+  .card, .turn-panel, .end-card { padding: 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="rulesOverlay">
+  <div class="overlay-box">
+    <button class="overlay-close" onclick="closeRules()">✕</button>
+    <h2>REGLAS</h2>
+    <p>Cada jugador tiene dos contadores: <span style="color:var(--neg)">negativo</span> y <span style="color:var(--pos)">positivo</span>, ambos empiezan en <strong>0</strong>.</p>
+    <ul>
+      <li>En tu turno <strong>declarás un número del 1 al 6</strong> antes de tirar.</li>
+      <li>Luego tirás el dado.</li>
+    </ul>
+    <p><strong>Resultado:</strong></p>
+    <ul>
+      <li><span style="color:var(--accent)">✅ Acierto</span> — ambos contadores se acercan 1 punto a cero.</li>
+      <li><span style="color:var(--pos)">📈 Mayor</span> — la diferencia suma al positivo.</li>
+      <li><span style="color:var(--neg)">📉 Menor</span> — la diferencia resta al negativo.</li>
+    </ul>
+    <p>Llegás a <strong style="color:var(--neg)">−10</strong> o <strong style="color:var(--pos)">+10</strong> → perdés. El último en pie gana.</p>
+  </div>
+</div>
+
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-title">CERO</div>
+    <div class="hdr-sub">el juego del equilibrio</div>
+  </div>
+
+  <div class="theme-bar">
+    <button class="tbtn tbtn-casino  on"  onclick="setTheme('casino',   this)">🎲 Casino</button>
+    <button class="tbtn tbtn-nautico"     onclick="setTheme('nautico',  this)">🌊 Náutico</button>
+    <button class="tbtn tbtn-anotador"    onclick="setTheme('anotador', this)">📝 Anotador</button>
+    <button class="tbtn tbtn-arcade"      onclick="setTheme('arcade',   this)">🎮 Arcade</button>
+    <button class="tbtn tbtn-tarot"       onclick="setTheme('tarot',    this)">🃏 Tarot</button>
+    <button class="tbtn tbtn-rules"       onclick="openRules()">? Reglas</button>
+  </div>
+
+  <!-- SETUP -->
+  <div class="screen on" id="scSetup">
+    <div class="card">
+      <div class="setup-heading">JUGADORES</div>
+      <div class="player-list" id="playerList"></div>
+      <div class="setup-actions">
+        <button class="btn-sec" onclick="addPlayer()">+ Agregar</button>
+        <button class="btn-main" id="startBtn" onclick="startGame()" disabled>JUGAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen" id="scGame">
+    <div class="game-layout">
+      <div class="scoreboard" id="scoreboard"></div>
+      <div class="turn-panel">
+        <div class="t-label">TURNO DE</div>
+        <div class="t-name" id="tName">—</div>
+        <div id="declareSection">
+          <div class="declare-lbl">Declará tu número</div>
+          <div class="dice-row" id="diceRow"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="result-row" id="resultRow" style="display:none">
+          <div class="result-die" id="resultDie"></div>
+          <div class="result-tag" id="resultTag"></div>
+        </div>
+        <div class="act-row">
+          <button class="btn-main" id="mainBtn" onclick="handleAction()">TIRAR DADO</button>
+        </div>
+      </div>
+      <div class="log-box">
+        <div class="log-head">Historial</div>
+        <div id="gameLog"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- END -->
+  <div class="screen" id="scEnd">
+    <div class="end-card">
+      <div class="end-label">ELIMINADO</div>
+      <div class="end-name"   id="endName">—</div>
+      <div class="end-reason" id="endReason"></div>
+      <div class="divider" style="max-width:120px;margin:0 auto 24px"></div>
+      <div id="winSection"></div>
+      <div class="act-row">
+        <button class="btn-main" onclick="restartGame()">NUEVA PARTIDA</button>
+        <button class="btn-sec"  onclick="goSetup()">CAMBIAR JUGADORES</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DICE SVG ──────────────────────────────────────────────────────────────
+const DOTS = {
+  1:[[20,20]],
+  2:[[10,10],[30,30]],
+  3:[[10,10],[20,20],[30,30]],
+  4:[[10,10],[30,10],[10,30],[30,30]],
+  5:[[10,10],[30,10],[20,20],[10,30],[30,30]],
+  6:[[10,10],[30,10],[10,20],[30,20],[10,30],[30,30]]
+};
+function dieSVG(n) {
+  const c = (DOTS[n]||[]).map(([x,y]) =>
+    `<circle cx="${x}" cy="${y}" r="4.2" fill="var(--die-dot)"/>`
+  ).join('');
+  return `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">${c}</svg>`;
+}
+
+// ── THEME ─────────────────────────────────────────────────────────────────
+function setTheme(t, btn) {
+  document.body.className = 't-' + t;
+  document.querySelectorAll('.tbtn').forEach(b => b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  try { localStorage.setItem('cero-t', t); } catch(e) {}
+}
+(function() {
+  let saved = 'casino';
+  try { saved = localStorage.getItem('cero-t') || 'casino'; } catch(e) {}
+  const btn = document.querySelector('.tbtn-' + saved);
+  setTheme(saved, btn);
+})();
+
+function openRules()  { document.getElementById('rulesOverlay').classList.add('on'); }
+function closeRules() { document.getElementById('rulesOverlay').classList.remove('on'); }
+document.getElementById('rulesOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeRules();
+});
+
+// ── SETUP ─────────────────────────────────────────────────────────────────
+let pNames = ['', ''];
+
+function renderSetup() {
+  const list = document.getElementById('playerList');
+  list.innerHTML = '';
+  pNames.forEach((name, i) => {
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    const inp = document.createElement('input');
+    inp.className = 'p-input'; inp.type = 'text';
+    inp.placeholder = 'Jugador ' + (i + 1); inp.value = name;
+    inp.oninput = () => { pNames[i] = inp.value; checkStart(); };
+    inp.onkeydown = e => {
+      if (e.key === 'Enter') {
+        const all = document.querySelectorAll('.p-input');
+        if (all[i+1]) all[i+1].focus();
+        else document.getElementById('startBtn').focus();
+      }
+    };
+    row.appendChild(inp);
+    if (pNames.length > 2) {
+      const x = document.createElement('button');
+      x.className = 'btn-x'; x.textContent = '✕';
+      x.onclick = () => { pNames.splice(i, 1); renderSetup(); };
+      row.appendChild(x);
+    } else {
+      const sp = document.createElement('div'); sp.style.width = '34px';
+      row.appendChild(sp);
+    }
+    list.appendChild(row);
+  });
+  checkStart();
+}
+function addPlayer() { if (pNames.length < 8) { pNames.push(''); renderSetup(); } }
+function checkStart() {
+  document.getElementById('startBtn').disabled = pNames.filter(n => n.trim()).length < 2;
+}
+renderSetup();
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let players = [], cur = 0, declared = null, phase = 'declare';
+const LIMIT = 10;
+
+function startGame() {
+  players = pNames.filter(n => n.trim()).map(n => ({ name: n.trim(), neg: 0, pos: 0, alive: true }));
+  cur = 0; declared = null; phase = 'declare';
+  document.getElementById('gameLog').innerHTML = '';
+  show('scGame'); render();
+}
+function goSetup()     { show('scSetup'); }
+function restartGame() {
+  players.forEach(p => { p.neg = 0; p.pos = 0; p.alive = true; });
+  cur = 0; declared = null; phase = 'declare';
+  document.getElementById('gameLog').innerHTML = '';
+  show('scGame'); render();
+}
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function render() { renderBoard(); renderTurn(); }
+
+function renderBoard() {
+  const sb = document.getElementById('scoreboard');
+  sb.innerHTML = '';
+  players.forEach((p, i) => {
+    const c = document.createElement('div');
+    c.className = 'p-card' + (i === cur && p.alive ? ' active' : '') + (!p.alive ? ' dead' : '');
+    c.id = 'pc' + i;
+    const np = Math.min(Math.abs(p.neg) / LIMIT * 100, 100);
+    const pp = Math.min(Math.abs(p.pos) / LIMIT * 100, 100);
+    c.innerHTML =
+      `<div class="p-name">${p.alive ? '' : '✕ '}${p.name}</div>` +
+      `<div class="p-score"><div class="p-score-lbl">NEG</div>` +
+        `<div class="p-score-val s-neg" id="sn${i}">${p.neg}</div></div>` +
+      `<div class="p-score"><div class="p-score-lbl">POS</div>` +
+        `<div class="p-score-val s-pos" id="sp${i}">${p.pos > 0 ? '+' : ''}${p.pos}</div></div>` +
+      `<div class="p-prog">` +
+        `<span class="prog-lbl" style="color:var(--neg)">-10</span>` +
+        `<div class="prog-track flip"><div class="prog-fill fill-neg" style="width:${np}%"></div></div>` +
+        `<span class="prog-lbl">0</span>` +
+        `<div class="prog-track"><div class="prog-fill fill-pos" style="width:${pp}%"></div></div>` +
+        `<span class="prog-lbl" style="color:var(--pos)">+10</span>` +
+      `</div>`;
+    sb.appendChild(c);
+  });
+}
+
+function renderTurn() {
+  const p = players[cur];
+  document.getElementById('tName').textContent = p.name.toUpperCase();
+
+  const row = document.getElementById('diceRow');
+  row.innerHTML = '';
+  for (let n = 1; n <= 6; n++) {
+    const b = document.createElement('div');
+    b.className = 'die-btn' + (declared === n ? ' picked' : '');
+    b.innerHTML = dieSVG(n);
+    b.onclick = () => pick(n);
+    row.appendChild(b);
+  }
+
+  const ds  = document.getElementById('declareSection');
+  const rr  = document.getElementById('resultRow');
+  const btn = document.getElementById('mainBtn');
+
+  if (phase === 'declare') {
+    ds.style.opacity = '1'; ds.style.pointerEvents = 'auto';
+    rr.style.display = 'none';
+    btn.textContent = 'TIRAR DADO'; btn.disabled = declared === null;
+  } else if (phase === 'rolling') {
+    ds.style.opacity = '0.4'; ds.style.pointerEvents = 'none';
+    rr.style.display = 'flex';
+    btn.textContent = 'TIRANDO…'; btn.disabled = true;
+  } else {
+    ds.style.opacity = '0.4'; ds.style.pointerEvents = 'none';
+    rr.style.display = 'flex';
+    btn.textContent = 'SIGUIENTE TURNO →'; btn.disabled = false;
+  }
+}
+
+function pick(n) { if (phase === 'declare') { declared = n; renderTurn(); } }
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────
+function handleAction() {
+  if (phase === 'declare' && declared !== null) doRoll();
+  else if (phase === 'result') nextTurn();
+}
+
+function doRoll() {
+  phase = 'rolling'; renderTurn();
+  const rd = document.getElementById('resultDie');
+  rd.classList.add('spinning');
+  document.getElementById('resultTag').textContent = '';
+  document.getElementById('resultTag').className = 'result-tag';
+  let ticks = 0;
+  const iv = setInterval(() => {
+    rd.innerHTML = dieSVG(Math.ceil(Math.random() * 6));
+    if (++ticks >= 14) {
+      clearInterval(iv);
+      rd.classList.remove('spinning');
+      const rolled = Math.ceil(Math.random() * 6);
+      rd.innerHTML = dieSVG(rolled);
+      applyResult(rolled);
+    }
+  }, 80);
+}
+
+function applyResult(rolled) {
+  phase = 'result';
+  const p = players[cur];
+  const diff = rolled - declared;
+  let cls = '', label = '', dn = 0, dp = 0;
+
+  if (diff === 0) {
+    cls = 'tag-correct'; label = `✅ ACIERTO — salió ${rolled}`;
+    if (p.neg < 0) dn = +1;
+    if (p.pos > 0) dp = -1;
+  } else if (diff > 0) {
+    cls = 'tag-over'; label = `📈 +${diff} al positivo — salió ${rolled}, dijiste ${declared}`;
+    dp = diff;
+  } else {
+    cls = 'tag-under'; label = `📉 ${diff} al negativo — salió ${rolled}, dijiste ${declared}`;
+    dn = diff;
+  }
+
+  p.neg += dn; p.pos += dp;
+  const tag = document.getElementById('resultTag');
+  tag.textContent = label; tag.className = 'result-tag ' + cls;
+
+  if (dn !== 0) showFloater(cur, 'neg', dn);
+  if (dp !== 0) showFloater(cur, 'pos', dp);
+  addLog(p.name, declared, rolled, diff);
+  renderBoard(); renderTurn();
+
+  if (p.neg <= -LIMIT || p.pos >= LIMIT) setTimeout(eliminate, 1100);
+}
+
+function showFloater(idx, side, val) {
+  const card = document.getElementById('pc' + idx);
+  const el   = document.getElementById((side === 'neg' ? 'sn' : 'sp') + idx);
+  if (!card || !el) return;
+  const cr = card.getBoundingClientRect(), er = el.getBoundingClientRect();
+  const f = document.createElement('div');
+  f.className = 'floater';
+  f.textContent = (val > 0 ? '+' : '') + val;
+  f.style.color = side === 'neg' ? 'var(--neg)' : 'var(--pos)';
+  f.style.left = (er.left - cr.left + er.width / 2) + 'px';
+  f.style.top  = (er.top  - cr.top) + 'px';
+  card.appendChild(f);
+  setTimeout(() => f.remove(), 1200);
+}
+
+function addLog(name, dec, rolled, diff) {
+  const log = document.getElementById('gameLog');
+  const e = document.createElement('div');
+  e.className = 'log-line';
+  const res = diff === 0
+    ? `<span class="lc">acierto</span>`
+    : diff > 0 ? `<span class="lo">+${diff} positivo</span>`
+               : `<span class="lu">${diff} negativo</span>`;
+  e.innerHTML = `<span class="ln">${name}</span> declaró ${dec}, salió ${rolled} → ${res}`;
+  log.insertBefore(e, log.firstChild);
+}
+
+function nextTurn() {
+  declared = null; phase = 'declare';
+  let t = 0;
+  do { cur = (cur + 1) % players.length; t++; }
+  while (!players[cur].alive && t < players.length);
+  render();
+}
+
+function eliminate() {
+  const p = players[cur];
+  p.alive = false;
+  const alive = players.filter(x => x.alive);
+  if (alive.length <= 1) {
+    document.getElementById('endName').textContent = p.name.toUpperCase();
+    document.getElementById('endReason').textContent =
+      p.neg <= -LIMIT ? `llegó a −${LIMIT} en negativo` : `llegó a +${LIMIT} en positivo`;
+    const ws = document.getElementById('winSection');
+    ws.innerHTML = alive[0]
+      ? `<div class="win-label">GANADOR</div><div class="win-name">${alive[0].name}</div>`
+      : `<div class="win-label">EMPATE — todos eliminados</div>`;
+    show('scEnd');
+  } else {
+    nextTurn();
+  }
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (phase === 'declare' && e.key >= '1' && e.key <= '6') pick(+e.key);
+  if ((e.key === 'Enter' || e.key === ' ') && !e.target.matches('input,button')) {
+    const btn = document.getElementById('mainBtn');
+    if (btn && !btn.disabled) { e.preventDefault(); handleAction(); }
+  }
+});
+</script>
+</body>
+</html>
